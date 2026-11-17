@@ -5,108 +5,212 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      height: 100%;
-      background: #ffffff;
+      margin: 0; height: 100%; background: #fff;
       font-family: system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      user-select: none;
+      overflow: hidden; user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .counter {
-      position: absolute;
-      top: 24px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      font-size: 36px;
-      font-weight: 700;
-      color: #000;
-    }
-    .counter small {
-      display: block;
-      font-size: 14px;
-      font-weight: 400;
-      color: #777;
-    }
-    .wrap {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .app { height: 100%; display: flex; flex-direction: column; }
+    .main { flex: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+    .balance { text-align: center; padding-top: 20px; }
+    .balance b { display: block; font-size: 36px; }
+    .balance small { color: #777; font-size: 14px; }
+    .perhour { color: #777; font-size: 13px; margin-top: 4px; }
+    .wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
     #tap {
-      width: 240px;
-      height: 240px;
-      border-radius: 50%;
-      border: none;
-      padding: 0;
-      background: #e5e5e5;
-      box-shadow: inset 0 -8px 0 #cfcfcf, 0 10px 25px rgba(0,0,0,.15);
-      cursor: pointer;
-      transition: transform .08s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 220px; height: 220px; border-radius: 50%; border: none; padding: 0;
+      background: #e5e5e5; box-shadow: inset 0 -8px 0 #cfcfcf, 0 10px 25px rgba(0,0,0,.15);
+      cursor: pointer; transition: transform .08s;
+      display: flex; align-items: center; justify-content: center;
     }
     #tap:active { transform: scale(.95); }
-    #tap img {
-      width: 180px;
-      height: 180px;
-      pointer-events: none;
-    }
+    #tap img { width: 170px; height: 170px; pointer-events: none; }
+    #tap .emoji { font-size: 110px; pointer-events: none; }
     .plus {
-      position: absolute;
-      font-size: 28px;
-      font-weight: 700;
-      color: #000;
-      pointer-events: none;
-      animation: up .7s ease-out forwards;
+      position: fixed; font-size: 28px; font-weight: 700; color: #000;
+      pointer-events: none; animation: up .7s ease-out forwards;
     }
-    @keyframes up {
-      from { opacity: 1; transform: translateY(0); }
-      to   { opacity: 0; transform: translateY(-80px); }
+    @keyframes up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-80px); } }
+
+    .shop-tabs { display: flex; border-top: 1px solid #ddd; }
+    .shop-tabs button {
+      flex: 1; padding: 12px; border: none; background: #f5f5f5;
+      font-size: 14px; cursor: pointer;
     }
+    .shop-tabs button.active { background: #000; color: #fff; }
+    .shop { height: 280px; overflow-y: auto; padding: 12px; background: #f5f5f5; }
+    .item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+    }
+    .item .info small { color: #777; display: block; }
+    .item button {
+      border: none; background: #000; color: #fff; border-radius: 8px;
+      padding: 8px 12px; cursor: pointer; font-size: 14px;
+    }
+    .item button:disabled { background: #bbb; cursor: default; }
+    .note { font-size: 12px; color: #777; text-align: center; padding: 8px; }
+    .buy-input {
+      width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc;
+      border-radius: 8px; margin-bottom: 6px;
+    }
+    .buy-cost { font-size: 14px; margin-bottom: 8px; color: #333; }
   </style>
 </head>
 <body>
-  <div class="counter">
-    <span id="score">0</span>
-    <small>монет</small>
+<div class="app">
+  <div class="main">
+    <div class="balance">
+      <b id="score">0</b>
+      <small>бананов</small>
+      <div class="perhour" id="perhour"></div>
+    </div>
+    <div class="wrap">
+      <button id="tap" aria-label="Кликнуть">
+        <img id="bananaImg" src="banana.png" alt="банан"
+             onerror="this.style.display='none'; document.getElementById('emoji').style.display='block';">
+        <span class="emoji" id="emoji" style="display:none">🍌</span>
+      </button>
+    </div>
   </div>
 
-  <div class="wrap">
-    <button id="tap" aria-label="Кликнуть">
-      <!-- Замените src на свою картинку банана (PNG с прозрачным фоном) -->
-      <img src="banana.png" alt="банан" onerror="this.replaceWith('🍌')">
-    </button>
+  <div class="shop-tabs">
+    <button data-tab="upgrades" class="active">Улучшения</button>
+    <button data-tab="bananas">Бананы</button>
+    <button data-tab="leaders">Лидеры</button>
   </div>
+  <div class="shop" id="shop"></div>
+</div>
 
-  <script>
-    const tg = window.Telegram?.WebApp;
-    if (tg) { tg.ready(); tg.expand(); }
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
 
-    const scoreEl = document.getElementById('score');
-    const btn = document.getElementById('tap');
-    let score = Number(localStorage.getItem('score') || 0);
-    scoreEl.textContent = score;
+  const BANANAS_PER_STAR = 10000;
 
-    btn.addEventListener('click', (e) => {
-      score++;
-      scoreEl.textContent = score;
-      localStorage.setItem('score', score);
+  const state = JSON.parse(localStorage.getItem('state') || 'null') || {
+    bananas: 0, perClick: 1, perSec: 0, upgrades: {}
+  };
+  const save = () => localStorage.setItem('state', JSON.stringify(state));
 
-      const p = document.createElement('div');
-      p.className = 'plus';
-      p.textContent = '+1';
-      p.style.left = e.clientX + 'px';
-      p.style.top = e.clientY + 'px';
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 700);
+  const UPGRADES = [
+    { id: 'click1', name: '+1 банан за клик',  desc: '+1 за каждое нажатие',    price: 100,     type: 'click', value: 1 },
+    { id: 'click2', name: 'Золотой банан',     desc: '+10 за клик',             price: 5000,    type: 'click', value: 10 },
+    { id: 'auto1',  name: 'Обезьянка',         desc: '+1 банан каждую сек',     price: 100000,  type: 'sec',   value: 1 },
+    { id: 'auto2',  name: 'Банановая ферма',   desc: '+10 бананов каждую сек',  price: 1000000, type: 'sec',   value: 10 },
+  ];
 
-      tg?.HapticFeedback?.impactOccurred('light');
-    });
-  </script>
+  const PACKS = [50000, 100000, 500000];
+
+  let currentTab = 'upgrades';
+  document.querySelectorAll('.shop-tabs button').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.shop-tabs button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentTab = b.dataset.tab;
+      renderShop();
+    };
+  });
+
+  function renderShop() {
+    const shop = document.getElementById('shop');
+    shop.innerHTML = '';
+
+    if (currentTab === 'upgrades') {
+      UPGRADES.forEach(u => {
+        const count = state.upgrades[u.id] || 0;
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<div class="info"><b>${u.name}</b> ${count ? '×' + count : ''}<small>${u.desc}</small></div>`;
+        const btn = document.createElement('button');
+        btn.textContent = u.price.toLocaleString('ru') + ' 🍌';
+        btn.disabled = state.bananas < u.price;
+        btn.onclick = () => buyUpgrade(u);
+        div.appendChild(btn);
+        shop.appendChild(div);
+      });
+    }
+
+    if (currentTab === 'bananas') {
+      shop.innerHTML = `
+        <div class="item" style="display:block">
+          <input id="amount" class="buy-input" type="number" min="10000" step="10000"
+                 placeholder="Сколько бананов купить?" oninput="updateCost()">
+          <div class="buy-cost" id="cost">Введите количество (кратно 10 000)</div>
+          <button id="buyBtn" disabled style="width:100%" onclick="buyBananas()">Купить</button>
+        </div>
+        <div class="note">Курс: 10 000 бананов = 1 ⭐. Оплата проходит через бота в Telegram Stars.</div>`;
+    }
+
+    if (currentTab === 'leaders') {
+      shop.innerHTML = `
+        <div class="note">Таблица лидеров появится после подключения сервера.</div>
+        <div class="item"><span>За всё время</span><b>—</b></div>
+        <div class="item"><span>За месяц</span><b>—</b></div>
+        <div class="item"><span>За неделю</span><b>—</b></div>`;
+    }
+  }
+
+  window.updateCost = function () {
+    const v = Math.floor(Number(document.getElementById('amount').value) || 0);
+    const btn = document.getElementById('buyBtn');
+    const cost = document.getElementById('cost');
+    if (v >= BANANAS_PER_STAR && v % BANANAS_PER_STAR === 0) {
+      cost.textContent = `Цена: ${v / BANANAS_PER_STAR} ⭐`;
+      btn.disabled = false;
+    } else {
+      cost.textContent = 'Введите число, кратное 10 000 (минимум 10 000)';
+      btn.disabled = true;
+    }
+  };
+
+  window.buyBananas = function () {
+    const v = Math.floor(Number(document.getElementById('amount').value) || 0);
+    const stars = v / BANANAS_PER_STAR;
+    // Демо: реальную оплату делает бот через sendInvoice (XTR)
+    tg?.showConfirm
+      ? tg.showConfirm(`Купить ${v.toLocaleString('ru')} бананов за ${stars} ⭐?`, () => {})
+      : alert(`Купить ${v} бананов за ${stars} ⭐?`);
+  };
+
+  function buyUpgrade(u) {
+    if (state.bananas < u.price) return;
+    state.bananas -= u.price;
+    state.upgrades[u.id] = (state.upgrades[u.id] || 0) + 1;
+    if (u.type === 'click') state.perClick += u.value;
+    if (u.type === 'sec')   state.perSec   += u.value;
+    update();
+  }
+
+  const tapBtn = document.getElementById('tap');
+  tapBtn.addEventListener('click', (e) => {
+    state.bananas += state.perClick;
+    const p = document.createElement('div');
+    p.className = 'plus';
+    p.textContent = '+' + state.perClick;
+    p.style.left = (e.clientX - 10) + 'px';
+    p.style.top = (e.clientY - 20) + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+    tg?.HapticFeedback?.impactOccurred('light');
+    update();
+  });
+
+  setInterval(() => {
+    if (state.perSec > 0) { state.bananas += state.perSec; update(); }
+  }, 1000);
+
+  function update() {
+    document.getElementById('score').textContent = Math.floor(state.bananas).toLocaleString('ru');
+    document.getElementById('perhour').textContent = `+${state.perSec} в секунду · +${state.perClick} за клик`;
+    save();
+    if (currentTab === 'upgrades') renderShop();
+  }
+
+  renderShop();
+  update();
+</script>
 </body>
 </html>
