@@ -13,12 +13,21 @@
       -webkit-tap-highlight-color: transparent;
     }
     .app { height: 100%; display: flex; flex-direction: column; }
-    .main { flex: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
-    .balance { text-align: center; padding-top: 20px; }
-    .balance b { display: block; font-size: 36px; }
-    .balance small { color: #777; font-size: 14px; }
-    .perhour { color: #777; font-size: 13px; margin-top: 4px; }
-    .wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+
+    .topbar { display: flex; justify-content: center; padding: 12px; }
+    .board-btn {
+      border: none; background: #000; color: #fff; border-radius: 12px;
+      padding: 10px 20px; font-size: 22px; font-weight: 700; cursor: pointer;
+    }
+
+    .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .perhour { color: #777; font-size: 13px; margin-bottom: 14px; }
+
+    .energy { width: 220px; margin-bottom: 16px; font-size: 13px; color: #555; text-align: center; }
+    .energy-bar { height: 10px; background: #e5e5e5; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+    .energy-fill { height: 100%; background: #f5c518; transition: width .3s; }
+
+    .tap-row { display: flex; align-items: center; gap: 14px; }
     #tap {
       width: 220px; height: 220px; border-radius: 50%; border: none; padding: 0;
       background: #e5e5e5; box-shadow: inset 0 -8px 0 #cfcfcf, 0 10px 25px rgba(0,0,0,.15);
@@ -28,69 +37,86 @@
     #tap:active { transform: scale(.95); }
     #tap img { width: 170px; height: 170px; pointer-events: none; }
     #tap .emoji { font-size: 110px; pointer-events: none; }
+    .help-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 2px solid #000;
+      background: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+    }
+
+    .shop-btn {
+      margin: 16px auto 24px; display: block; border: none; background: #000; color: #fff;
+      border-radius: 10px; padding: 12px 40px; font-size: 16px; cursor: pointer;
+    }
+
     .plus {
-      position: fixed; font-size: 28px; font-weight: 700; color: #000;
+      position: fixed; font-size: 26px; font-weight: 700; color: #000;
       pointer-events: none; animation: up .7s ease-out forwards;
     }
     @keyframes up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-80px); } }
 
-    .shop-tabs { display: flex; border-top: 1px solid #ddd; }
-    .shop-tabs button {
-      flex: 1; padding: 12px; border: none; background: #f5f5f5;
-      font-size: 14px; cursor: pointer;
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.4);
+      display: flex; align-items: center; justify-content: center; z-index: 10;
     }
-    .shop-tabs button.active { background: #000; color: #fff; }
-    .shop { height: 280px; overflow-y: auto; padding: 12px; background: #f5f5f5; }
-    .item {
+    .sheet {
+      background: #fff; border-radius: 16px; width: 90%; max-width: 340px;
+      max-height: 70vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sheet-head {
       display: flex; justify-content: space-between; align-items: center;
-      background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 8px;
+      padding: 12px 14px; border-bottom: 1px solid #eee;
     }
-    .item .info small { color: #777; display: block; }
-    .item button {
-      border: none; background: #000; color: #fff; border-radius: 8px;
-      padding: 8px 12px; cursor: pointer; font-size: 14px;
-    }
-    .item button:disabled { background: #bbb; cursor: default; }
-    .note { font-size: 12px; color: #777; text-align: center; padding: 8px; }
-    .buy-input {
-      width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc;
-      border-radius: 8px; margin-bottom: 6px;
-    }
-    .buy-cost { font-size: 14px; margin-bottom: 8px; color: #333; }
-    .period-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
-    .period-tabs button {
+    .sheet-head .x { border: none; background: none; font-size: 18px; cursor: pointer; }
+    .sheet-body { padding: 12px; overflow-y: auto; }
+
+    .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+    .tabs button {
       flex: 1; padding: 8px; border: none; border-radius: 8px;
       background: #e5e5e5; font-size: 13px; cursor: pointer;
     }
-    .period-tabs button.active { background: #000; color: #fff; }
-    .rank { display: flex; justify-content: space-between; background: #fff;
-      border-radius: 10px; padding: 10px; margin-bottom: 6px; font-size: 14px; }
-    .rank.me { border: 2px solid #000; }
+    .tabs button.active { background: #000; color: #fff; }
+
+    .item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #f5f5f5; border-radius: 10px; padding: 10px; margin-bottom: 6px;
+    }
+    .item small { color: #777; display: block; }
+    .item button {
+      border: none; background: #000; color: #fff; border-radius: 8px;
+      padding: 7px 10px; cursor: pointer; font-size: 13px; white-space: nowrap;
+    }
+    .item button:disabled { background: #bbb; cursor: default; }
+
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .row.me { font-weight: 700; }
+    .note { font-size: 12px; color: #777; text-align: center; padding: 8px 0; }
+    .buy-input { width: 100%; padding: 9px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
 <div class="app">
+  <div class="topbar">
+    <button class="board-btn" id="boardBtn">🍌 <span id="score">0</span></button>
+  </div>
+
   <div class="main">
-    <div class="balance">
-      <b id="score">0</b>
-      <small>бананов</small>
-      <div class="perhour" id="perhour"></div>
+    <div class="perhour" id="perhour"></div>
+
+    <div class="energy">
+      Банановая энергия: <span id="energyText">100 / 100</span>
+      <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
     </div>
-    <div class="wrap">
+
+    <div class="tap-row">
       <button id="tap" aria-label="Кликнуть">
         <img id="bananaImg" src="banana.png" alt="банан"
              onerror="this.style.display='none'; document.getElementById('emoji').style.display='block';">
         <span class="emoji" id="emoji" style="display:none">🍌</span>
       </button>
+      <button class="help-btn" id="helpBtn" aria-label="Информация">?</button>
     </div>
   </div>
 
-  <div class="shop-tabs">
-    <button data-tab="upgrades" class="active">Улучшения</button>
-    <button data-tab="bananas">Бананы</button>
-    <button data-tab="leaders">Лидеры</button>
-  </div>
-  <div class="shop" id="shop"></div>
+  <button class="shop-btn" id="shopBtn">Магазин</button>
 </div>
 
 <script>
@@ -98,141 +124,59 @@
   if (tg) { tg.ready(); tg.expand(); }
 
   const BANANAS_PER_STAR = 10000;
-  const WEEK = 7 * 24 * 3600 * 1000;
-
-  const state = JSON.parse(localStorage.getItem('state') || 'null') || {
-    bananas: 0, perClick: 1, perSec: 0, upgrades: {},
-    earned: { all: 0, month: 0, week: 0, monthKey: '', weekKey: '' }
-  };
-  const save = () => localStorage.setItem('state', JSON.stringify(state));
+  const ENERGY_BOOST_PRICE = 1000000;
+  const ENERGY_BOOST_STEP = 10;
+  const ENERGY_BOOST_MAX = 10;
+  const ENERGY_REGEN_PER_SEC = 0.1; // 1% каждые 10 сек
 
   const UPGRADES = [
-    { id: 'click1', name: '+1 банан за клик',  desc: '+1 за каждое нажатие',   price: 100,     type: 'click', value: 1 },
-    { id: 'click2', name: 'Золотой банан',     desc: '+10 за клик',            price: 5000,    type: 'click', value: 10 },
-    { id: 'auto1',  name: 'Обезьянка',         desc: '+1 банан каждую сек',    price: 100000,  type: 'sec',   value: 1 },
-    { id: 'auto2',  name: 'Банановая ферма',   desc: '+10 бананов каждую сек', price: 1000000, type: 'sec',   value: 10 },
+    { id: 'c2',  kind: 'click', value: 2,  name: 'Двойной банан',    desc: 'За клик 2 банана',        price: 5000 },
+    { id: 'c8',  kind: 'click', value: 8,  name: 'Банановый удар',   desc: 'За клик 8 бананов',       price: 200000 },
+    { id: 'c10', kind: 'click', value: 10, name: 'Максимум',         desc: 'За клик 10 бананов',      price: 1000000 },
+    { id: 'a1',  kind: 'sec',   value: 1,  name: 'Обезьянка',        desc: '+1 банан в секунду',      price: 100000 },
+    { id: 'a2',  kind: 'sec',   value: 10, name: 'Банановая ферма',  desc: '+10 бананов в секунду',   price: 1000000 },
   ];
 
-  let currentTab = 'upgrades';
-  let currentPeriod = 'all';
-
-  document.querySelectorAll('.shop-tabs button').forEach(b => {
-    b.onclick = () => {
-      document.querySelectorAll('.shop-tabs button').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      currentTab = b.dataset.tab;
-      renderShop();
-    };
-  });
-
-  // ---------- Магазин ----------
-  function renderShop() {
-    const shop = document.getElementById('shop');
-
-    if (currentTab === 'upgrades') {
-      shop.innerHTML = '';
-      UPGRADES.forEach(u => {
-        const count = state.upgrades[u.id] || 0;
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `<div class="info"><b>${u.name}</b> ${count ? '×' + count : ''}<small>${u.desc}</small></div>`;
-        const btn = document.createElement('button');
-        btn.textContent = u.price.toLocaleString('ru') + ' 🍌';
-        btn.disabled = state.bananas < u.price;
-        btn.onclick = () => buyUpgrade(u);
-        div.appendChild(btn);
-        shop.appendChild(div);
-      });
-    }
-
-    if (currentTab === 'bananas') {
-      shop.innerHTML = `
-        <div class="item" style="display:block">
-          <input id="amount" class="buy-input" type="number" min="10000" step="10000"
-                 placeholder="Сколько бананов купить?" oninput="updateCost()">
-          <div class="buy-cost" id="cost">Введите количество (кратно 10 000)</div>
-          <button id="buyBtn" disabled style="width:100%" onclick="buyBananas()">Купить</button>
-        </div>
-        <div class="note">Курс: 10 000 бананов = 1 ⭐. Оплата проходит через бота в Telegram Stars.</div>`;
-    }
-
-    if (currentTab === 'leaders') {
-      shop.innerHTML = `
-        <div class="period-tabs">
-          <button data-p="all" class="${currentPeriod==='all'?'active':''}">За всё время</button>
-          <button data-p="month" class="${currentPeriod==='month'?'active':''}">За месяц</button>
-          <button data-p="week" class="${currentPeriod==='week'?'active':''}">За неделю</button>
-        </div>
-        <div id="board"></div>
-        <div class="note">Демо: видны только ваши данные. Настоящий топ появится после подключения сервера.</div>`;
-      shop.querySelectorAll('.period-tabs button').forEach(b => {
-        b.onclick = () => { currentPeriod = b.dataset.p; renderShop(); };
-      });
-      renderBoard();
-    }
-  }
-
-  // ---------- Покупка бананов ----------
-  window.updateCost = function () {
-    const v = Math.floor(Number(document.getElementById('amount').value) || 0);
-    const btn = document.getElementById('buyBtn');
-    const cost = document.getElementById('cost');
-    if (v >= BANANAS_PER_STAR && v % BANANAS_PER_STAR === 0) {
-      cost.textContent = `Цена: ${v / BANANAS_PER_STAR} ⭐`;
-      btn.disabled = false;
-    } else {
-      cost.textContent = 'Введите число, кратное 10 000 (минимум 10 000)';
-      btn.disabled = true;
-    }
+  const state = JSON.parse(localStorage.getItem('state') || 'null') || {
+    bananas: 0, perClick: 1, perSec: 0,
+    energy: 100, boosts: 0,
+    bought: {},
+    stats: { all: 0, taps: 0 },
+    earned: { month: 0, week: 0, monthKey: '', weekKey: '' }
   };
+  const save = () => localStorage.setItem('state', JSON.stringify(state));
+  const maxEnergy = () => 100 + state.boosts * ENERGY_BOOST_STEP;
 
-  window.buyBananas = function () {
-    const v = Math.floor(Number(document.getElementById('amount').value) || 0);
-    const stars = v / BANANAS_PER_STAR;
-    const text = `Купить ${v.toLocaleString('ru')} бананов за ${stars} ⭐?`;
-    const go = () => requestPurchase(v, stars);
-    if (tg?.showConfirm) tg.showConfirm(text, ok => { if (ok) go(); });
-    else if (confirm(text)) go();
-  };
-
-  // Здесь в будущем запрос на бэкенд, который выставит счёт через sendInvoice (XTR).
-  // Бананы начисляются только после подтверждения оплаты сервером.
-  function requestPurchase(bananas, stars) {
-    tg?.showAlert
-      ? tg.showAlert('Оплата подключается через бота. Пока это демо, бананы не начислены.')
-      : alert('Демо: оплата подключается через бота.');
-  }
-
-  // ---------- Улучшения ----------
-  function buyUpgrade(u) {
-    if (state.bananas < u.price) return;
-    state.bananas -= u.price;
-    state.upgrades[u.id] = (state.upgrades[u.id] || 0) + 1;
-    if (u.type === 'click') state.perClick += u.value;
-    if (u.type === 'sec')   state.perSec   += u.value;
-    update();
-  }
-
-  // ---------- Клик и доход ----------
-  function addEarned(n) {
+  // ---------- Периоды для лидерборда ----------
+  function periodKeys() {
     const now = new Date();
     const monthKey = now.getFullYear() + '-' + (now.getMonth() + 1);
-    const weekStart = new Date(now); weekStart.setHours(0,0,0,0);
-    const day = (weekStart.getDay() + 6) % 7;
-    weekStart.setDate(weekStart.getDate() - day);
-    const weekKey = weekStart.toISOString().slice(0, 10);
+    const ws = new Date(now); ws.setHours(0, 0, 0, 0);
+    ws.setDate(ws.getDate() - ((ws.getDay() + 6) % 7));
+    return { monthKey, weekKey: ws.toISOString().slice(0, 10) };
+  }
 
-    if (state.earned.monthKey !== monthKey) { state.earned.month = 0; state.earned.monthKey = monthKey; }
-    if (state.earned.weekKey !== weekKey)   { state.earned.week = 0;  state.earned.weekKey = weekKey; }
-
-    state.earned.all += n;
+  function addEarned(n) {
+    const k = periodKeys();
+    if (state.earned.monthKey !== k.monthKey) { state.earned.month = 0; state.earned.monthKey = k.monthKey; }
+    if (state.earned.weekKey !== k.weekKey)   { state.earned.week = 0;  state.earned.weekKey = k.weekKey; }
+    state.stats.all += n;
     state.earned.month += n;
     state.earned.week += n;
   }
 
+  // ---------- Клик ----------
   document.getElementById('tap').addEventListener('click', (e) => {
+    const cost = state.perClick;
+    if (state.energy < cost) {
+      tg?.HapticFeedback?.notificationOccurred('error');
+      return;
+    }
+    state.energy -= cost;
     state.bananas += state.perClick;
+    state.stats.taps++;
     addEarned(state.perClick);
+
     const p = document.createElement('div');
     p.className = 'plus';
     p.textContent = '+' + state.perClick;
@@ -244,29 +188,218 @@
     update();
   });
 
+  // ---------- Тик раз в секунду: доход и восстановление энергии ----------
   setInterval(() => {
-    if (state.perSec > 0) { state.bananas += state.perSec; addEarned(state.perSec); update(); }
+    if (state.perSec > 0) {
+      state.bananas += state.perSec;
+      addEarned(state.perSec);
+    }
+    state.energy = Math.min(maxEnergy(), state.energy + ENERGY_REGEN_PER_SEC);
+    update();
   }, 1000);
 
-  // ---------- Лидерборд (демо, только свои данные) ----------
-  function renderBoard() {
-    const board = document.getElementById('board');
-    if (!board) return;
-    const key = { all: 'all', month: 'month', week: 'week' }[currentPeriod];
-    const value = Math.floor(state.earned[key]).toLocaleString('ru');
-    const name = tg?.initDataUnsafe?.user?.first_name || 'Вы';
-    board.innerHTML = `<div class="rank me"><span>1. ${name}</span><b>${value}</b></div>`;
+  // ---------- Улучшения ----------
+  function buyUpgrade(u) {
+    if (state.bananas < u.price || state.bought[u.id]) return;
+    state.bananas -= u.price;
+    state.bought[u.id] = true;
+    if (u.kind === 'click') state.perClick = u.value;
+    if (u.kind === 'sec') state.perSec += u.value;
+    update();
   }
 
+  function buyEnergy() {
+    if (state.bananas < ENERGY_BOOST_PRICE || state.boosts >= ENERGY_BOOST_MAX) return;
+    state.bananas -= ENERGY_BOOST_PRICE;
+    state.boosts++;
+    state.energy = Math.min(maxEnergy(), state.energy + ENERGY_BOOST_STEP);
+    update();
+  }
+
+  // ---------- Модальные окна ----------
+  let modalView = null;
+  let modalBody = null;
+  let shopTab = 'upgrades';
+
+  function openModal(view) {
+    closeModal();
+    modalView = view;
+    const ov = document.createElement('div');
+    ov.className = 'overlay';
+    ov.id = 'ov';
+    const sheet = document.createElement('div');
+    sheet.className = 'sheet';
+    const titles = { shop: 'Магазин', board: 'Таблица лидеров', info: 'Информация' };
+    sheet.innerHTML = `<div class="sheet-head"><b>${titles[view]}</b><button class="x">✕</button></div>`;
+    modalBody = document.createElement('div');
+    modalBody.className = 'sheet-body';
+    sheet.appendChild(modalBody);
+    ov.appendChild(sheet);
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+    sheet.querySelector('.x').onclick = closeModal;
+    renderModal();
+  }
+
+  function closeModal() {
+    document.getElementById('ov')?.remove();
+    modalView = null;
+    modalBody = null;
+  }
+
+  function renderModal() {
+    if (!modalBody) return;
+    modalBody.innerHTML = '';
+    if (modalView === 'shop') modalBody.appendChild(buildShop());
+    if (modalView === 'board') modalBody.appendChild(buildBoard());
+    if (modalView === 'info') modalBody.appendChild(buildInfo());
+  }
+
+  // ---------- Магазин ----------
+  function buildShop() {
+    const wrap = document.createElement('div');
+    const tabs = document.createElement('div');
+    tabs.className = 'tabs';
+    [['upgrades', 'Улучшения'], ['bananas', 'Бананы']].forEach(([id, label]) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      if (shopTab === id) b.classList.add('active');
+      b.onclick = () => { shopTab = id; renderModal(); };
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    if (shopTab === 'upgrades') {
+      UPGRADES.forEach(u => {
+        const done = !!state.bought[u.id];
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `<div><b>${u.name}</b><small>${done ? 'Куплено' : u.desc}</small></div>`;
+        const btn = document.createElement('button');
+        btn.textContent = done ? '✓' : u.price.toLocaleString('ru') + ' 🍌';
+        btn.disabled = done || state.bananas < u.price;
+        btn.onclick = () => buyUpgrade(u);
+        div.appendChild(btn);
+        wrap.appendChild(div);
+      });
+
+      const e = document.createElement('div');
+      e.className = 'item';
+      e.innerHTML = `<div><b>Банановая энергия +10%</b><small>Куплено ${state.boosts} из ${ENERGY_BOOST_MAX}</small></div>`;
+      const eb = document.createElement('button');
+      eb.textContent = ENERGY_BOOST_PRICE.toLocaleString('ru') + ' 🍌';
+      eb.disabled = state.boosts >= ENERGY_BOOST_MAX || state.bananas < ENERGY_BOOST_PRICE;
+      eb.onclick = buyEnergy;
+      e.appendChild(eb);
+      wrap.appendChild(e);
+    }
+
+    if (shopTab === 'bananas') {
+      const box = document.createElement('div');
+      box.innerHTML = `
+        <input id="amount" class="buy-input" type="number" min="10000" step="10000"
+               placeholder="Сколько бананов купить?">
+        <div id="cost" class="note">Введите количество (кратно 10 000)</div>
+        <button id="buyBtn" disabled style="width:100%;border:none;background:#000;color:#fff;padding:10px;border-radius:8px">Купить</button>
+        <div class="note">Курс: 10 000 бананов = 1 ⭐. Оплата идёт через бота в Telegram Stars.</div>`;
+      const input = box.querySelector('#amount');
+      const cost = box.querySelector('#cost');
+      const btn = box.querySelector('#buyBtn');
+      input.addEventListener('input', () => {
+        const v = Math.floor(Number(input.value) || 0);
+        if (v >= BANANAS_PER_STAR && v % BANANAS_PER_STAR === 0) {
+          cost.textContent = `Цена: ${v / BANANAS_PER_STAR} ⭐`;
+          btn.disabled = false;
+        } else {
+          cost.textContent = 'Введите число, кратное 10 000 (минимум 10 000)';
+          btn.disabled = true;
+        }
+      });
+      btn.onclick = () => buyBananas(Math.floor(Number(input.value) || 0));
+      wrap.appendChild(box);
+    }
+    return wrap;
+  }
+
+  // Демо: реальную оплату делает бот через sendInvoice (XTR)
+  function buyBananas(v) {
+    const stars = v / BANANAS_PER_STAR;
+    const text = `Купить ${v.toLocaleString('ru')} бананов за ${stars} ⭐?`;
+    const go = () => tg?.showAlert
+      ? tg.showAlert('Оплата подключается через бота. Пока это демо.')
+      : alert('Демо: оплата подключается через бота.');
+    if (tg?.showConfirm) tg.showConfirm(text, ok => { if (ok) go(); });
+    else if (confirm(text)) go();
+  }
+
+  // ---------- Таблица лидеров (демо: только свои данные) ----------
+  let boardPeriod = 'all';
+  function buildBoard() {
+    const wrap = document.createElement('div');
+    const tabs = document.createElement('div');
+    tabs.className = 'tabs';
+    [['all', 'За всё время'], ['month', 'За месяц'], ['week', 'За неделю']].forEach(([id, label]) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      if (boardPeriod === id) b.classList.add('active');
+      b.onclick = () => { boardPeriod = id; renderModal(); };
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    const value = boardPeriod === 'all' ? state.stats.all
+                : boardPeriod === 'month' ? state.earned.month
+                : state.earned.week;
+    const name = tg?.initDataUnsafe?.user?.first_name || 'Вы';
+    const row = document.createElement('div');
+    row.className = 'row me';
+    row.innerHTML = `<span>1. ${name}</span><span>${Math.floor(value).toLocaleString('ru')} 🍌</span>`;
+    wrap.appendChild(row);
+
+    const note = document.createElement('div');
+    note.className = 'note';
+    note.textContent = 'Демо: настоящий топ появится после подключения сервера.';
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  // ---------- Информация ----------
+  function buildInfo() {
+    const wrap = document.createElement('div');
+    const rows = [
+      ['Всего собрано бананов', Math.floor(state.stats.all).toLocaleString('ru')],
+      ['Всего тапов', state.stats.taps.toLocaleString('ru')],
+      ['Доход в секунду', state.perSec.toLocaleString('ru')],
+      ['Бананов за клик', state.perClick.toLocaleString('ru')],
+      ['Максимум энергии', maxEnergy()],
+    ];
+    rows.forEach(([k, v]) => {
+      const r = document.createElement('div');
+      r.className = 'row';
+      r.innerHTML = `<span>${k}</span><b>${v}</b>`;
+      wrap.appendChild(r);
+    });
+    return wrap;
+  }
+
+  document.getElementById('shopBtn').onclick = () => openModal('shop');
+  document.getElementById('boardBtn').onclick = () => openModal('board');
+  document.getElementById('helpBtn').onclick = () => openModal('info');
+
+  // ---------- Обновление экрана ----------
   function update() {
     document.getElementById('score').textContent = Math.floor(state.bananas).toLocaleString('ru');
     document.getElementById('perhour').textContent = `+${state.perSec} в секунду · +${state.perClick} за клик`;
+    const max = maxEnergy();
+    document.getElementById('energyText').textContent = `${Math.floor(state.energy)} / ${max}`;
+    document.getElementById('energyFill').style.width = (state.energy / max * 100) + '%';
     save();
-    if (currentTab === 'upgrades') renderShop();
-    if (currentTab === 'leaders') renderBoard();
+
+    // Перерисовываем открытое окно, но не магазин с полем ввода, чтобы не сбивать ввод
+    if (modalView === 'board' || modalView === 'info') renderModal();
+    if (modalView === 'shop' && shopTab === 'upgrades') renderModal();
   }
 
-  renderShop();
   update();
 </script>
 </body>
