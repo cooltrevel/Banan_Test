@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .counter {
+      position: absolute;
+      top: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: #000;
+    }
+    .counter small {
+      display: block;
+      font-size: 14px;
+      font-weight: 400;
+      color: #777;
+    }
+    .wrap {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #tap {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      background: #e5e5e5;
+      box-shadow: inset 0 -8px 0 #cfcfcf, 0 10px 25px rgba(0,0,0,.15);
+      cursor: pointer;
+      transition: transform .08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #tap:active { transform: scale(.95); }
+    #tap img {
+      width: 180px;
+      height: 180px;
+      pointer-events: none;
+    }
+    .plus {
+      position: absolute;
+      font-size: 28px;
+      font-weight: 700;
+      color: #000;
+      pointer-events: none;
+      animation: up .7s ease-out forwards;
+    }
+    @keyframes up {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-80px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="counter">
+    <span id="score">0</span>
+    <small>монет</small>
+  </div>
+
+  <div class="wrap">
+    <button id="tap" aria-label="Кликнуть">
+      <!-- Замените src на свою картинку банана (PNG с прозрачным фоном) -->
+      <img src="banana.png" alt="банан" onerror="this.replaceWith('🍌')">
+    </button>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    const scoreEl = document.getElementById('score');
+    const btn = document.getElementById('tap');
+    let score = Number(localStorage.getItem('score') || 0);
+    scoreEl.textContent = score;
+
+    btn.addEventListener('click', (e) => {
+      score++;
+      scoreEl.textContent = score;
+      localStorage.setItem('score', score);
+
+      const p = document.createElement('div');
+      p.className = 'plus';
+      p.textContent = '+1';
+      p.style.left = e.clientX + 'px';
+      p.style.top = e.clientY + 'px';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 700);
+
+      tg?.HapticFeedback?.impactOccurred('light');
+    });
+  </script>
+</body>
+</html>
