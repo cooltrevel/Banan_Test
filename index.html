@@ -14,19 +14,21 @@
     }
     .app { height: 100%; display: flex; flex-direction: column; }
 
-    .topbar { display: flex; justify-content: center; padding: 12px; }
+    .topbar { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 12px; }
     .board-btn {
       border: none; background: #000; color: #fff; border-radius: 12px;
       padding: 10px 20px; font-size: 22px; font-weight: 700; cursor: pointer;
     }
+    .help-btn {
+      width: 36px; height: 36px; border-radius: 50%; border: 2px solid #000;
+      background: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+    }
 
     .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .perhour { color: #777; font-size: 13px; margin-bottom: 12px; }
     .energy { width: 220px; margin-bottom: 16px; font-size: 13px; color: #555; text-align: center; }
     .energy-bar { height: 10px; background: #e5e5e5; border-radius: 6px; overflow: hidden; margin-top: 4px; }
     .energy-fill { height: 100%; background: #f5c518; transition: width .3s; }
 
-    .tap-row { display: flex; align-items: center; gap: 14px; }
     #tap {
       width: 220px; height: 220px; border-radius: 50%; border: none; padding: 0;
       background: #e5e5e5; box-shadow: inset 0 -8px 0 #cfcfcf, 0 10px 25px rgba(0,0,0,.15);
@@ -36,10 +38,6 @@
     #tap:active { transform: scale(.95); }
     #tap img { width: 170px; height: 170px; pointer-events: none; }
     #tap .emoji { font-size: 110px; pointer-events: none; }
-    .help-btn {
-      width: 36px; height: 36px; border-radius: 50%; border: 2px solid #000;
-      background: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
-    }
 
     .shop-btn {
       margin: 16px auto 24px; display: block; border: none; background: #000; color: #fff;
@@ -61,7 +59,7 @@
       background: #fff; border-radius: 16px; width: 90%; max-width: 340px;
       max-height: 60vh; display: flex; flex-direction: column; overflow: hidden;
     }
-    .overlay.bottom .sheet { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 45vh; }
+    .overlay.bottom .sheet { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 50vh; }
     .sheet-head {
       display: flex; justify-content: space-between; align-items: center;
       padding: 12px 14px; border-bottom: 1px solid #eee;
@@ -97,24 +95,20 @@
 <div class="app">
   <div class="topbar">
     <button class="board-btn" id="boardBtn">🍌 <span id="score">0</span></button>
+    <button class="help-btn" id="helpBtn" aria-label="Информация">?</button>
   </div>
 
   <div class="main">
-    <div class="perhour" id="perhour"></div>
-
     <div class="energy">
       Банановая энергия: <span id="energyText">100 / 100</span>
       <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
     </div>
 
-    <div class="tap-row">
-      <button id="tap" aria-label="Кликнуть">
-        <img id="bananaImg" src="banana.png" alt="банан"
-             onerror="this.style.display='none'; document.getElementById('emoji').style.display='block';">
-        <span class="emoji" id="emoji" style="display:none">🍌</span>
-      </button>
-      <button class="help-btn" id="helpBtn" aria-label="Информация">?</button>
-    </div>
+    <button id="tap" aria-label="Кликнуть">
+      <img id="bananaImg" src="banana.png" alt="банан"
+           onerror="this.style.display='none'; document.getElementById('emoji').style.display='block';">
+      <span class="emoji" id="emoji" style="display:none">🍌</span>
+    </button>
   </div>
 
   <button class="shop-btn" id="shopBtn">Магазин</button>
@@ -131,21 +125,23 @@
   const ENERGY_REGEN_PER_SEC = 0.1;
 
   const UPGRADES = [
-    { id: 'c2',  kind: 'click', value: 2,  name: 'Двойной банан',   desc: 'За клик 2 банана',       price: 5000 },
-    { id: 'c8',  kind: 'click', value: 8,  name: 'Банановый удар',  desc: 'За клик 8 бананов',      price: 200000 },
-    { id: 'c10', kind: 'click', value: 10, name: 'Максимум',        desc: 'За клик 10 бананов',     price: 1000000 },
-    { id: 'a1',  kind: 'sec',   value: 1,  name: 'Обезьянка',       desc: '+1 банан в секунду',     price: 100000 },
-    { id: 'a2',  kind: 'sec',   value: 10, name: 'Банановая ферма', desc: '+10 бананов в секунду',  price: 1000000 },
+    { id: 'c2',  kind: 'click', value: 2,  name: 'Двойной банан',   desc: 'За клик 2 банана',      price: 5000 },
+    { id: 'c8',  kind: 'click', value: 8,  name: 'Банановый удар',  desc: 'За клик 8 бананов',     price: 200000 },
+    { id: 'c10', kind: 'click', value: 10, name: 'Максимум',        desc: 'За клик 10 бананов',    price: 1000000 },
+    { id: 'a1',  kind: 'sec',   value: 1,  name: 'Обезьянка',       desc: '+1 банан в секунду',    price: 100000 },
+    { id: 'a2',  kind: 'sec',   value: 10, name: 'Банановая ферма', desc: '+10 бананов в секунду', price: 1000000 },
   ];
 
-  const state = JSON.parse(localStorage.getItem('state') || 'null') || {
+  // Новый ключ хранения: старые сохранения с другой структурой не используются
+  const DEFAULT_STATE = {
     bananas: 0, perClick: 1, perSec: 0,
     energy: 100, boosts: 0,
     bought: {},
     stats: { all: 0, taps: 0 },
     earned: { month: 0, week: 0, monthKey: '', weekKey: '' }
   };
-  const save = () => localStorage.setItem('state', JSON.stringify(state));
+  const state = JSON.parse(localStorage.getItem('banana_v2') || 'null') || structuredClone(DEFAULT_STATE);
+  const save = () => localStorage.setItem('banana_v2', JSON.stringify(state));
   const maxEnergy = () => 100 + state.boosts * ENERGY_BOOST_STEP;
 
   // ---------- Периоды лидерборда ----------
@@ -366,7 +362,7 @@
       ['Всего тапов', state.stats.taps.toLocaleString('ru')],
       ['Доход в секунду', state.perSec.toLocaleString('ru')],
       ['Бананов за клик', state.perClick.toLocaleString('ru')],
-      ['Максимум энергии', maxEnergy()],
+      ['Энергия', `${Math.floor(state.energy)} / ${maxEnergy()}`],
     ].forEach(([k, v]) => {
       const r = document.createElement('div');
       r.className = 'row';
@@ -380,10 +376,9 @@
   document.getElementById('boardBtn').onclick = () => showOverlay('board', 'Таблица лидеров', false);
   document.getElementById('helpBtn').onclick = () => showOverlay('info', 'Информация', false);
 
-  // ---------- Обновление главного экрана (без перерисовки окон) ----------
+  // ---------- Главный экран ----------
   function updateMain() {
     document.getElementById('score').textContent = Math.floor(state.bananas).toLocaleString('ru');
-    document.getElementById('perhour').textContent = `+${state.perSec} в секунду · +${state.perClick} за клик`;
     const max = maxEnergy();
     document.getElementById('energyText').textContent = `${Math.floor(state.energy)} / ${max}`;
     document.getElementById('energyFill').style.width = (state.energy / max * 100) + '%';
