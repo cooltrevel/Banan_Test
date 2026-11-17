@@ -21,8 +21,7 @@
     }
 
     .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .perhour { color: #777; font-size: 13px; margin-bottom: 14px; }
-
+    .perhour { color: #777; font-size: 13px; margin-bottom: 12px; }
     .energy { width: 220px; margin-bottom: 16px; font-size: 13px; color: #555; text-align: center; }
     .energy-bar { height: 10px; background: #e5e5e5; border-radius: 6px; overflow: hidden; margin-top: 4px; }
     .energy-fill { height: 100%; background: #f5c518; transition: width .3s; }
@@ -54,13 +53,15 @@
     @keyframes up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-80px); } }
 
     .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.4);
-      display: flex; align-items: center; justify-content: center; z-index: 10;
+      position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 10;
+      display: flex; align-items: center; justify-content: center;
     }
+    .overlay.bottom { align-items: flex-end; }
     .sheet {
       background: #fff; border-radius: 16px; width: 90%; max-width: 340px;
-      max-height: 70vh; display: flex; flex-direction: column; overflow: hidden;
+      max-height: 60vh; display: flex; flex-direction: column; overflow: hidden;
     }
+    .overlay.bottom .sheet { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 45vh; }
     .sheet-head {
       display: flex; justify-content: space-between; align-items: center;
       padding: 12px 14px; border-bottom: 1px solid #eee;
@@ -77,7 +78,7 @@
 
     .item {
       display: flex; justify-content: space-between; align-items: center;
-      background: #f5f5f5; border-radius: 10px; padding: 10px; margin-bottom: 6px;
+      background: #f5f5f5; border-radius: 10px; padding: 10px; margin-bottom: 6px; gap: 8px;
     }
     .item small { color: #777; display: block; }
     .item button {
@@ -127,14 +128,14 @@
   const ENERGY_BOOST_PRICE = 1000000;
   const ENERGY_BOOST_STEP = 10;
   const ENERGY_BOOST_MAX = 10;
-  const ENERGY_REGEN_PER_SEC = 0.1; // 1% каждые 10 сек
+  const ENERGY_REGEN_PER_SEC = 0.1;
 
   const UPGRADES = [
-    { id: 'c2',  kind: 'click', value: 2,  name: 'Двойной банан',    desc: 'За клик 2 банана',        price: 5000 },
-    { id: 'c8',  kind: 'click', value: 8,  name: 'Банановый удар',   desc: 'За клик 8 бананов',       price: 200000 },
-    { id: 'c10', kind: 'click', value: 10, name: 'Максимум',         desc: 'За клик 10 бананов',      price: 1000000 },
-    { id: 'a1',  kind: 'sec',   value: 1,  name: 'Обезьянка',        desc: '+1 банан в секунду',      price: 100000 },
-    { id: 'a2',  kind: 'sec',   value: 10, name: 'Банановая ферма',  desc: '+10 бананов в секунду',   price: 1000000 },
+    { id: 'c2',  kind: 'click', value: 2,  name: 'Двойной банан',   desc: 'За клик 2 банана',       price: 5000 },
+    { id: 'c8',  kind: 'click', value: 8,  name: 'Банановый удар',  desc: 'За клик 8 бананов',      price: 200000 },
+    { id: 'c10', kind: 'click', value: 10, name: 'Максимум',        desc: 'За клик 10 бананов',     price: 1000000 },
+    { id: 'a1',  kind: 'sec',   value: 1,  name: 'Обезьянка',       desc: '+1 банан в секунду',     price: 100000 },
+    { id: 'a2',  kind: 'sec',   value: 10, name: 'Банановая ферма', desc: '+10 бананов в секунду',  price: 1000000 },
   ];
 
   const state = JSON.parse(localStorage.getItem('state') || 'null') || {
@@ -147,7 +148,7 @@
   const save = () => localStorage.setItem('state', JSON.stringify(state));
   const maxEnergy = () => 100 + state.boosts * ENERGY_BOOST_STEP;
 
-  // ---------- Периоды для лидерборда ----------
+  // ---------- Периоды лидерборда ----------
   function periodKeys() {
     const now = new Date();
     const monthKey = now.getFullYear() + '-' + (now.getMonth() + 1);
@@ -185,27 +186,26 @@
     document.body.appendChild(p);
     setTimeout(() => p.remove(), 700);
     tg?.HapticFeedback?.impactOccurred('light');
-    update();
+    updateMain();
   });
 
-  // ---------- Тик раз в секунду: доход и восстановление энергии ----------
+  // ---------- Тик раз в секунду ----------
   setInterval(() => {
-    if (state.perSec > 0) {
-      state.bananas += state.perSec;
-      addEarned(state.perSec);
-    }
+    if (state.perSec > 0) { state.bananas += state.perSec; addEarned(state.perSec); }
     state.energy = Math.min(maxEnergy(), state.energy + ENERGY_REGEN_PER_SEC);
-    update();
+    updateMain();
+    if (openPanel === 'board' || openPanel === 'info') renderPanel();
   }, 1000);
 
-  // ---------- Улучшения ----------
+  // ---------- Покупки ----------
   function buyUpgrade(u) {
     if (state.bananas < u.price || state.bought[u.id]) return;
     state.bananas -= u.price;
     state.bought[u.id] = true;
     if (u.kind === 'click') state.perClick = u.value;
     if (u.kind === 'sec') state.perSec += u.value;
-    update();
+    updateMain();
+    renderPanel();
   }
 
   function buyEnergy() {
@@ -213,46 +213,42 @@
     state.bananas -= ENERGY_BOOST_PRICE;
     state.boosts++;
     state.energy = Math.min(maxEnergy(), state.energy + ENERGY_BOOST_STEP);
-    update();
+    updateMain();
+    renderPanel();
   }
 
-  // ---------- Модальные окна ----------
-  let modalView = null;
-  let modalBody = null;
+  // ---------- Окна ----------
+  let openPanel = null;
   let shopTab = 'upgrades';
+  let boardPeriod = 'all';
 
-  function openModal(view) {
-    closeModal();
-    modalView = view;
+  function showOverlay(kind, title, bottom) {
+    closePanel();
+    openPanel = kind;
     const ov = document.createElement('div');
-    ov.className = 'overlay';
+    ov.className = 'overlay' + (bottom ? ' bottom' : '');
     ov.id = 'ov';
-    const sheet = document.createElement('div');
-    sheet.className = 'sheet';
-    const titles = { shop: 'Магазин', board: 'Таблица лидеров', info: 'Информация' };
-    sheet.innerHTML = `<div class="sheet-head"><b>${titles[view]}</b><button class="x">✕</button></div>`;
-    modalBody = document.createElement('div');
-    modalBody.className = 'sheet-body';
-    sheet.appendChild(modalBody);
-    ov.appendChild(sheet);
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-head"><b>${title}</b><button class="x">✕</button></div>
+      <div class="sheet-body" id="panelBody"></div></div>`;
     document.body.appendChild(ov);
-    ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
-    sheet.querySelector('.x').onclick = closeModal;
-    renderModal();
+    ov.addEventListener('click', e => { if (e.target === ov) closePanel(); });
+    ov.querySelector('.x').onclick = closePanel;
+    renderPanel();
   }
 
-  function closeModal() {
+  function closePanel() {
     document.getElementById('ov')?.remove();
-    modalView = null;
-    modalBody = null;
+    openPanel = null;
   }
 
-  function renderModal() {
-    if (!modalBody) return;
-    modalBody.innerHTML = '';
-    if (modalView === 'shop') modalBody.appendChild(buildShop());
-    if (modalView === 'board') modalBody.appendChild(buildBoard());
-    if (modalView === 'info') modalBody.appendChild(buildInfo());
+  function renderPanel() {
+    const body = document.getElementById('panelBody');
+    if (!body) return;
+    body.innerHTML = '';
+    if (openPanel === 'shop') body.appendChild(buildShop());
+    if (openPanel === 'board') body.appendChild(buildBoard());
+    if (openPanel === 'info') body.appendChild(buildInfo());
   }
 
   // ---------- Магазин ----------
@@ -264,7 +260,7 @@
       const b = document.createElement('button');
       b.textContent = label;
       if (shopTab === id) b.classList.add('active');
-      b.onclick = () => { shopTab = id; renderModal(); };
+      b.onclick = () => { shopTab = id; renderPanel(); };
       tabs.appendChild(b);
     });
     wrap.appendChild(tabs);
@@ -333,7 +329,6 @@
   }
 
   // ---------- Таблица лидеров (демо: только свои данные) ----------
-  let boardPeriod = 'all';
   function buildBoard() {
     const wrap = document.createElement('div');
     const tabs = document.createElement('div');
@@ -342,7 +337,7 @@
       const b = document.createElement('button');
       b.textContent = label;
       if (boardPeriod === id) b.classList.add('active');
-      b.onclick = () => { boardPeriod = id; renderModal(); };
+      b.onclick = () => { boardPeriod = id; renderPanel(); };
       tabs.appendChild(b);
     });
     wrap.appendChild(tabs);
@@ -366,14 +361,13 @@
   // ---------- Информация ----------
   function buildInfo() {
     const wrap = document.createElement('div');
-    const rows = [
+    [
       ['Всего собрано бананов', Math.floor(state.stats.all).toLocaleString('ru')],
       ['Всего тапов', state.stats.taps.toLocaleString('ru')],
       ['Доход в секунду', state.perSec.toLocaleString('ru')],
       ['Бананов за клик', state.perClick.toLocaleString('ru')],
       ['Максимум энергии', maxEnergy()],
-    ];
-    rows.forEach(([k, v]) => {
+    ].forEach(([k, v]) => {
       const r = document.createElement('div');
       r.className = 'row';
       r.innerHTML = `<span>${k}</span><b>${v}</b>`;
@@ -382,25 +376,21 @@
     return wrap;
   }
 
-  document.getElementById('shopBtn').onclick = () => openModal('shop');
-  document.getElementById('boardBtn').onclick = () => openModal('board');
-  document.getElementById('helpBtn').onclick = () => openModal('info');
+  document.getElementById('shopBtn').onclick = () => showOverlay('shop', 'Магазин', true);
+  document.getElementById('boardBtn').onclick = () => showOverlay('board', 'Таблица лидеров', false);
+  document.getElementById('helpBtn').onclick = () => showOverlay('info', 'Информация', false);
 
-  // ---------- Обновление экрана ----------
-  function update() {
+  // ---------- Обновление главного экрана (без перерисовки окон) ----------
+  function updateMain() {
     document.getElementById('score').textContent = Math.floor(state.bananas).toLocaleString('ru');
     document.getElementById('perhour').textContent = `+${state.perSec} в секунду · +${state.perClick} за клик`;
     const max = maxEnergy();
     document.getElementById('energyText').textContent = `${Math.floor(state.energy)} / ${max}`;
     document.getElementById('energyFill').style.width = (state.energy / max * 100) + '%';
     save();
-
-    // Перерисовываем открытое окно, но не магазин с полем ввода, чтобы не сбивать ввод
-    if (modalView === 'board' || modalView === 'info') renderModal();
-    if (modalView === 'shop' && shopTab === 'upgrades') renderModal();
   }
 
-  update();
+  updateMain();
 </script>
 </body>
 </html>
