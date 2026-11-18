@@ -139,7 +139,7 @@ const API = 'https://demand-newspaper-algebra-explain.trycloudflare.com';
       const r = await fetch(API + path, {
         method,
         keepalive: path === '/api/leave',
-        headers: { 'X-Init-Data': tg?.initData || '' },
+headers: { 'X-Init-Data': tg?.initData || '', 'ngrok-skip-browser-warning': '1' },
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) return { ok: false, error: j.detail || 'Ошибка сервера' };
