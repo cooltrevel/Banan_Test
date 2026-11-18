@@ -6,109 +6,89 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #fff; --fg: #000; --muted: #777; --card: #f5f5f5; --btn: #e5e5e5; --btn-shadow: #cfcfcf;
-      --sheet: #fff; --border: #eee; --accent: #000; --accent-fg: #fff; --disabled: #bbb; --input-border: #ccc;
+      --bg:#fff; --fg:#000; --muted:#777; --card:#f5f5f5; --btn:#e5e5e5; --btnsh:#cfcfcf;
+      --sheet:#fff; --border:#eee; --accent:#000; --accent-fg:#fff; --input:#ccc;
+      --disabled:#bbb; --ok:#9be15d; --gold:#ffb300;
     }
     :root.dark {
-      --bg: #000; --fg: #fff; --muted: #999; --card: #1c1c1c; --btn: #3a3a3a; --btn-shadow: #262626;
-      --sheet: #111; --border: #2a2a2a; --accent: #444; --accent-fg: #fff; --disabled: #555; --input-border: #444;
+      --bg:#000; --fg:#fff; --muted:#999; --card:#1c1c1c; --btn:#3a3a3a; --btnsh:#262626;
+      --sheet:#111; --border:#2a2a2a; --accent:#444; --accent-fg:#fff; --input:#444;
+      --disabled:#555;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing:border-box; }
     html, body {
-      margin: 0; height: 100%; background: var(--bg); color: var(--fg);
-      font-family: system-ui, -apple-system, sans-serif;
-      overflow: hidden; user-select: none; -webkit-tap-highlight-color: transparent;
+      margin:0; height:100%; background:var(--bg); color:var(--fg);
+      font-family:system-ui,-apple-system,sans-serif; overflow:hidden;
+      user-select:none; -webkit-tap-highlight-color:transparent;
     }
-    .app { height: 100%; display: flex; flex-direction: column; }
-
-    .topbar {
-      position: relative; display: flex; justify-content: center; align-items: center;
-      padding: 14px 56px;
-    }
+    .app { height:100%; display:flex; flex-direction:column; }
+    .topbar { position:relative; display:flex; justify-content:center; align-items:center; padding:14px 56px; }
     .board-btn {
-      border: none; background: var(--accent); color: var(--accent-fg); border-radius: 12px;
-      padding: 10px 20px; font-size: 22px; font-weight: 700; cursor: pointer;
+      border:none; background:var(--accent); color:var(--accent-fg); border-radius:12px;
+      padding:10px 20px; font-size:22px; font-weight:700; cursor:pointer;
     }
     .help-btn {
-      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-      width: 38px; height: 38px; border-radius: 50%;
-      border: 2px solid var(--fg); background: var(--bg); color: var(--fg);
-      font-size: 18px; font-weight: 700; cursor: pointer;
+      position:absolute; right:14px; top:50%; transform:translateY(-50%);
+      width:38px; height:38px; border-radius:50%; border:2px solid var(--fg);
+      background:var(--bg); color:var(--fg); font-size:18px; font-weight:700; cursor:pointer;
     }
-
-    .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .energy { width: 220px; margin-bottom: 16px; }
-    .energy-bar { height: 10px; background: var(--btn); border-radius: 6px; overflow: hidden; }
-    .energy-fill { height: 100%; background: #f5c518; transition: width .3s; }
-
+    .main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .collect {
+      display:none; margin-bottom:14px; border:none; background:var(--gold); color:#000;
+      border-radius:12px; padding:10px 22px; font-size:16px; font-weight:700; cursor:pointer;
+      transition:transform .3s, opacity .3s;
+    }
+    .collect.squash { transform:scale(.85); }
+    .collect.collapse { transform:scale(0); opacity:0; }
+    .energy { width:220px; margin-bottom:16px; }
+    .energy-bar { height:10px; background:var(--btn); border-radius:6px; overflow:hidden; }
+    .energy-fill { height:100%; background:#f5c518; transition:width .3s; }
     #tap {
-      width: 220px; height: 220px; border-radius: 50%; border: none; padding: 0;
-      background: var(--btn); box-shadow: inset 0 -8px 0 var(--btn-shadow), 0 10px 25px rgba(0,0,0,.15);
-      cursor: pointer; transition: transform .08s;
-      display: flex; align-items: center; justify-content: center;
+      width:220px; height:220px; border-radius:50%; border:none; padding:0;
+      background:var(--btn); box-shadow:inset 0 -8px 0 var(--btnsh), 0 10px 25px rgba(0,0,0,.15);
+      cursor:pointer; transition:transform .08s; display:flex; align-items:center; justify-content:center;
     }
-    #tap:active { transform: scale(.95); }
-    #tap img { width: 170px; height: 170px; pointer-events: none; }
-    #tap .emoji { font-size: 110px; pointer-events: none; }
-
+    #tap:active { transform:scale(.95); }
+    #tap img { width:170px; height:170px; pointer-events:none; }
+    #tap .emoji { font-size:110px; pointer-events:none; }
     .shop-btn {
-      margin: 16px auto 24px; display: block; border: none; background: var(--accent); color: var(--accent-fg);
-      border-radius: 10px; padding: 12px 40px; font-size: 16px; cursor: pointer;
+      margin:16px auto 24px; display:block; border:none; background:var(--accent); color:var(--accent-fg);
+      border-radius:10px; padding:12px 40px; font-size:16px; cursor:pointer;
     }
-
     .plus {
-      position: fixed; font-size: 26px; font-weight: 700; color: var(--fg);
-      pointer-events: none; animation: up .7s ease-out forwards;
+      position:fixed; font-size:26px; font-weight:700; color:var(--fg);
+      pointer-events:none; animation:up .7s ease-out forwards; z-index:30;
     }
-    @keyframes up { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-80px); } }
-
+    @keyframes up { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-80px); } }
+    .fly { position:fixed; left:0; top:0; font-size:22px; pointer-events:none; z-index:20; }
     .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 10;
-      display: flex; align-items: center; justify-content: center;
+      position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:10;
+      display:flex; align-items:center; justify-content:center;
     }
-    .overlay.bottom { align-items: flex-end; }
+    .overlay.bottom { align-items:flex-end; }
     .sheet {
-      background: var(--sheet); color: var(--fg); border-radius: 16px; width: 90%; max-width: 340px;
-      max-height: 60vh; display: flex; flex-direction: column; overflow: hidden;
+      background:var(--sheet); color:var(--fg); border-radius:16px; width:90%; max-width:340px;
+      max-height:60vh; display:flex; flex-direction:column; overflow:hidden;
     }
-    .overlay.bottom .sheet { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 50vh; }
-    .sheet-head {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 14px; border-bottom: 1px solid var(--border);
-    }
-    .sheet-head .x { border: none; background: none; color: var(--fg); font-size: 18px; cursor: pointer; }
-    .sheet-body { padding: 12px; overflow-y: auto; }
-
-    .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-    .tabs button {
-      flex: 1; padding: 8px; border: none; border-radius: 8px;
-      background: var(--btn); color: var(--fg); font-size: 13px; cursor: pointer;
-    }
-    .tabs button.active { background: var(--accent); color: var(--accent-fg); }
-
-    .item {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 6px; gap: 8px;
-    }
-    .item small { color: var(--muted); display: block; }
-    .item button, .buy-btn {
-      border: none; background: var(--accent); color: var(--accent-fg); border-radius: 8px;
-      padding: 7px 10px; cursor: pointer; font-size: 13px; white-space: nowrap;
-    }
-    .item button:disabled, .buy-btn:disabled { background: var(--disabled); cursor: default; }
-    .buy-btn { width: 100%; padding: 10px; margin-top: 6px; font-size: 14px; }
-
-    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-    .row.me { font-weight: 700; }
-    .note { font-size: 12px; color: var(--muted); text-align: center; padding: 8px 0; }
-    .buy-input {
-      width: 100%; padding: 9px; font-size: 16px; border: 1px solid var(--input-border);
-      border-radius: 8px; margin-bottom: 6px; background: var(--card); color: var(--fg);
-    }
-    .theme-btn {
-      width: 100%; margin-top: 12px; padding: 10px; border: none; border-radius: 8px;
-      background: var(--accent); color: var(--accent-fg); font-size: 14px; cursor: pointer;
-    }
+    .overlay.bottom .sheet { width:100%; max-width:100%; border-radius:16px 16px 0 0; max-height:55vh; }
+    .sheet-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid var(--border); }
+    .sheet-head .x { border:none; background:none; color:var(--fg); font-size:18px; cursor:pointer; }
+    .sheet-body { padding:12px; overflow-y:auto; }
+    .tabs { display:flex; gap:6px; margin-bottom:10px; }
+    .tabs button { flex:1; padding:8px; border:none; border-radius:8px; background:var(--btn); color:var(--fg); font-size:13px; cursor:pointer; }
+    .tabs button.active { background:var(--accent); color:var(--accent-fg); }
+    .item { display:flex; justify-content:space-between; align-items:center; background:var(--card); border-radius:10px; padding:10px; margin-bottom:6px; gap:8px; }
+    .item small { color:var(--muted); display:block; }
+    .buy { border:none; border-radius:8px; padding:7px 10px; font-size:13px; white-space:nowrap; cursor:pointer; background:var(--disabled); color:#fff; }
+    .buy.ok { background:var(--ok); color:#000; }
+    .buy.gold { background:var(--gold); color:#000; }
+    .buy:disabled { cursor:default; }
+    .buy.wide { width:100%; padding:10px; margin-top:6px; font-size:14px; }
+    .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+    .row.me { font-weight:700; }
+    .note { font-size:12px; color:var(--muted); text-align:center; padding:8px 0; }
+    .buy-input { width:100%; padding:9px; font-size:16px; border:1px solid var(--input); border-radius:8px; margin-bottom:6px; background:var(--card); color:var(--fg); }
+    .theme-btn { width:100%; margin-top:12px; padding:10px; border:none; border-radius:8px; background:var(--accent); color:var(--accent-fg); font-size:14px; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -119,10 +99,10 @@
   </div>
 
   <div class="main">
+    <button class="collect" id="collectBtn">Собрать</button>
     <div class="energy">
       <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
     </div>
-
     <button id="tap" aria-label="Кликнуть">
       <img id="bananaImg" src="banana.png" alt="банан"
            onerror="this.style.display='none'; document.getElementById('emoji').style.display='block';">
@@ -137,127 +117,136 @@
   const tg = window.Telegram?.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  const BANANAS_PER_STAR = 10000;
-  const ENERGY_BOOST_PRICE = 1000000;
-  const ENERGY_BOOST_STEP = 10;
-  const ENERGY_BOOST_MAX = 10;
-  const ENERGY_REGEN_PER_SEC = 0.1;
+  const $ = id => document.getElementById(id);
+  const fmt = n => Math.floor(n).toLocaleString('ru');
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const showError = msg => tg?.showAlert ? tg.showAlert(msg) : alert(msg);
 
+  const BANANAS_PER_STAR = 10000;
+  const BOOST_PRICE = 1000000, BOOST_MAX = 10;
+  const OFF_PRICE = 10000, OFF_MAX = 1440;
   const UPGRADES = [
-    { id: 'c2', kind: 'click', value: 1, name: 'Двойной банан',   desc: '+1 банан за клик (всего 2)',    price: 25000 },
-    { id: 'c8', kind: 'click', value: 8, name: 'Банановый отряд', desc: '+8 бананов за клик (всего 10)', price: 500000 },
-    { id: 'a1', kind: 'sec',   value: 1, name: 'Обезьянка',       desc: '+1 банан в секунду',            price: 500000 },
+    { id: 'c2', name: 'Двойной банан',   desc: '+1 банан за клик',       price: 25000 },
+    { id: 'c8', name: 'Банановый отряд', desc: '+8 бананов за клик',     price: 500000 },
+    { id: 'mk', name: 'Обезьянка',       desc: '+1 банан каждые 10 сек', price: 500000 },
   ];
 
-  const DEFAULT_STATE = {
-    bananas: 0, perClick: 1, perSec: 0,
-    energy: 100, boosts: 0, bought: {},
-    stats: { all: 0, taps: 0 },
-    earned: { month: 0, week: 0, monthKey: '', weekKey: '' },
-    theme: 'light'
+  // СЕРВЕР: адрес туннеля из cloudflared (без слеша в конце)
+  const API = 'https://ваш-адрес.trycloudflare.com';
+
+  async function call(path, method = 'POST') {
+    try {
+      const r = await fetch(API + path, {
+        method,
+        keepalive: path === '/api/leave',
+        headers: { 'X-Init-Data': tg?.initData || '' },
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) return { ok: false, error: j.detail || 'Ошибка сервера' };
+      return { ok: true, data: j.data };
+    } catch (e) {
+      return { ok: false, error: 'Нет связи с сервером' };
+    }
+  }
+
+  const Server = {
+    state:      () => call('/api/state', 'GET'),
+    tap:        () => call('/api/tap'),
+    buy:        id => call('/api/buy/' + id),
+    buyEnergy:  () => call('/api/buy-energy'),
+    buyOffline: () => call('/api/buy-offline'),
+    collect:    () => call('/api/collect'),
+    leave:      () => call('/api/leave'),
+    top:        period => call('/api/top?period=' + period, 'GET'),
   };
-  const saved = JSON.parse(localStorage.getItem('banana_v2') || 'null') || {};
-  const state = Object.assign(structuredClone(DEFAULT_STATE), saved);
-  if (!Number.isFinite(state.bananas)) state.bananas = 0;
-  if (!Number.isFinite(state.energy)) state.energy = 100;
-  if (!Number.isFinite(state.boosts)) state.boosts = 0;
-  state.bought = state.bought || {};
-  state.stats = Object.assign({ all: 0, taps: 0 }, state.stats);
-  state.earned = Object.assign({ month: 0, week: 0, monthKey: '', weekKey: '' }, state.earned);
 
-  // Бонусы считаются из купленных улучшений, поэтому старые сохранения не ломаются
-  function recalc() {
-    let click = 1, sec = 0;
-    UPGRADES.forEach(u => {
-      if (!state.bought[u.id]) return;
-      if (u.kind === 'click') click += u.value; else sec += u.value;
-    });
-    state.perClick = click;
-    state.perSec = sec;
+  let snap = null;
+  let collecting = false;
+  let openPanel = null;
+  let shopTab = 'upgrades';
+  let boardPeriod = 'all';
+  let shopRefs = [];
+
+  function setTheme(dark) {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('banana_theme', dark ? 'dark' : 'light');
   }
-  recalc();
+  setTheme(localStorage.getItem('banana_theme') === 'dark');
 
-  const save = () => localStorage.setItem('banana_v2', JSON.stringify(state));
-  const maxEnergy = () => 100 + state.boosts * ENERGY_BOOST_STEP;
-  const fmt = n => Math.floor(n).toLocaleString('ru');
-
-  function applyTheme() {
-    document.documentElement.classList.toggle('dark', state.theme === 'dark');
-  }
-  applyTheme();
-
-  // ---------- Периоды лидерборда ----------
-  function periodKeys() {
-    const now = new Date();
-    const monthKey = now.getFullYear() + '-' + (now.getMonth() + 1);
-    const ws = new Date(now); ws.setHours(0, 0, 0, 0);
-    ws.setDate(ws.getDate() - ((ws.getDay() + 6) % 7));
-    return { monthKey, weekKey: ws.toISOString().slice(0, 10) };
+  function updateAll() {
+    if (!snap) return;
+    $('score').textContent = fmt(snap.bananas);
+    $('energyFill').style.width = (snap.energy / snap.maxEnergy * 100) + '%';
+    const c = $('collectBtn');
+    if (!collecting) {
+      c.textContent = 'Собрать +' + fmt(snap.pending);
+      c.style.display = snap.pending >= 1 && snap.monkey ? 'block' : 'none';
+    }
+    refreshShop();
+    updateBoard();
+    updateInfo();
   }
 
-  function addEarned(n) {
-    const k = periodKeys();
-    if (state.earned.monthKey !== k.monthKey) { state.earned.month = 0; state.earned.monthKey = k.monthKey; }
-    if (state.earned.weekKey !== k.weekKey)   { state.earned.week = 0;  state.earned.weekKey = k.weekKey; }
-    state.stats.all += n;
-    state.earned.month += n;
-    state.earned.week += n;
-  }
-
-  // ---------- Клик ----------
-  document.getElementById('tap').addEventListener('click', (e) => {
-    const cost = state.perClick;
-    if (state.energy < cost) {
+  $('tap').addEventListener('click', async e => {
+    const gain = snap ? snap.perClick : 1;
+    const r = await Server.tap();
+    if (!r.ok) {
       tg?.HapticFeedback?.notificationOccurred('error');
+      if (r.error !== 'Недостаточно энергии') showError(r.error);
       return;
     }
-    state.energy -= cost;
-    state.bananas += cost;
-    state.stats.taps++;
-    addEarned(cost);
-
+    snap = r.data;
     const p = document.createElement('div');
     p.className = 'plus';
-    p.textContent = '+' + cost;
+    p.textContent = '+' + gain;
     p.style.left = (e.clientX - 10) + 'px';
     p.style.top = (e.clientY - 20) + 'px';
     document.body.appendChild(p);
     setTimeout(() => p.remove(), 700);
     tg?.HapticFeedback?.impactOccurred('light');
-    updateMain();
+    updateAll();
   });
 
-  // ---------- Тик раз в секунду ----------
-  setInterval(() => {
-    if (state.perSec > 0) { state.bananas += state.perSec; addEarned(state.perSec); }
-    state.energy = Math.min(maxEnergy(), state.energy + ENERGY_REGEN_PER_SEC);
-    updateMain();
-  }, 1000);
-
-  // ---------- Покупки ----------
-  function buyUpgrade(u) {
-    if (state.bananas < u.price || state.bought[u.id]) return;
-    state.bananas -= u.price;
-    state.bought[u.id] = true;
-    recalc();
-    updateMain();
-    renderPanel();
+  function flyBananas(fromEl, toEl, count = 20) {
+    const a = fromEl.getBoundingClientRect();
+    const b = toEl.getBoundingClientRect();
+    const sx = a.left + a.width / 2, sy = a.top + a.height / 2;
+    const tx = b.left + b.width / 2, ty = b.top + b.height / 2;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'fly';
+      el.textContent = '🍌';
+      el.style.left = sx + 'px';
+      el.style.top = sy + 'px';
+      document.body.appendChild(el);
+      const ang = Math.random() * Math.PI * 2;
+      const r = 50 + Math.random() * 70;
+      const ox = Math.cos(ang) * r, oy = Math.sin(ang) * r;
+      el.animate([
+        { transform: 'translate(-50%,-50%) scale(.3)', opacity: 0 },
+        { transform: `translate(calc(-50% + ${ox}px), calc(-50% + ${oy}px)) scale(1)`, opacity: 1, offset: .35 },
+        { transform: `translate(calc(-50% + ${tx - sx}px), calc(-50% + ${ty - sy}px)) scale(.6)`, opacity: 1 },
+      ], { duration: 700, delay: i * 25, easing: 'ease-in', fill: 'forwards' }).onfinish = () => el.remove();
+    }
+    return sleep(700 + (count - 1) * 25);
   }
 
-  function buyEnergy() {
-    if (state.bananas < ENERGY_BOOST_PRICE || state.boosts >= ENERGY_BOOST_MAX) return;
-    state.bananas -= ENERGY_BOOST_PRICE;
-    state.boosts++;
-    state.energy = Math.min(maxEnergy(), state.energy + ENERGY_BOOST_STEP);
-    updateMain();
-    renderPanel();
-  }
-
-  // ---------- Окна ----------
-  let openPanel = null;
-  let shopTab = 'upgrades';
-  let boardPeriod = 'all';
-  let shopRefs = [];
+  $('collectBtn').addEventListener('click', async () => {
+    if (collecting) return;
+    collecting = true;
+    const btn = $('collectBtn');
+    btn.classList.add('squash');
+    await sleep(120);
+    btn.classList.remove('squash');
+    btn.classList.add('collapse');
+    const flight = flyBananas(btn, $('score'));
+    const r = await Server.collect();
+    await flight;
+    if (r.ok) snap = r.data; else showError(r.error);
+    btn.classList.remove('collapse');
+    collecting = false;
+    updateAll();
+  });
 
   function showOverlay(kind, title, bottom) {
     closePanel();
@@ -281,15 +270,15 @@
   }
 
   function renderPanel() {
-    const body = document.getElementById('panelBody');
+    const body = $('panelBody');
     if (!body) return;
     body.innerHTML = '';
     if (openPanel === 'shop') body.appendChild(buildShop());
     if (openPanel === 'board') body.appendChild(buildBoard());
     if (openPanel === 'info') body.appendChild(buildInfo());
+    updateAll();
   }
 
-  // ---------- Магазин ----------
   function buildShop() {
     shopRefs = [];
     const wrap = document.createElement('div');
@@ -306,36 +295,63 @@
 
     if (shopTab === 'upgrades') {
       UPGRADES.forEach(u => {
-        const done = !!state.bought[u.id];
+        const done = !!snap?.bought?.[u.id];
         const row = document.createElement('div');
         row.className = 'item';
         row.innerHTML = `<div><b>${u.name}</b><small>${done ? 'Куплено' : u.desc}</small></div>`;
         const btn = document.createElement('button');
+        btn.className = 'buy';
         btn.textContent = done ? '✓' : fmt(u.price) + ' 🍌';
-        btn.onclick = () => buyUpgrade(u);
+        btn.onclick = async () => {
+          const r = await Server.buy(u.id);
+          if (!r.ok) return showError(r.error);
+          snap = r.data;
+          renderPanel();
+        };
         row.appendChild(btn);
-        shopRefs.push({ el: btn, ok: () => !state.bought[u.id] && state.bananas >= u.price });
+        shopRefs.push({ el: btn, kind: 'green', can: () => !done && snap && snap.bananas >= u.price });
         wrap.appendChild(row);
       });
 
-      const row = document.createElement('div');
-      row.className = 'item';
-      row.innerHTML = `<div><b>Банановая энергия +10%</b><small>Куплено ${state.boosts} из ${ENERGY_BOOST_MAX}</small></div>`;
+      const off = document.createElement('div');
+      off.className = 'item';
+      off.innerHTML = `<div><b>Оффлайн +10 мин</b><small>Лимит: ${snap?.offlineMin ?? 180} мин (макс. ${OFF_MAX})</small></div>`;
+      const ob = document.createElement('button');
+      ob.className = 'buy';
+      ob.textContent = fmt(OFF_PRICE) + ' 🍌';
+      ob.onclick = async () => {
+        const r = await Server.buyOffline();
+        if (!r.ok) return showError(r.error);
+        snap = r.data;
+        renderPanel();
+      };
+      off.appendChild(ob);
+      shopRefs.push({ el: ob, kind: 'gold', maxed: () => snap && snap.offlineMin >= OFF_MAX });
+      wrap.appendChild(off);
+
+      const en = document.createElement('div');
+      en.className = 'item';
+      en.innerHTML = `<div><b>Банановая энергия +10%</b><small>Куплено ${snap?.boosts ?? 0} из ${BOOST_MAX}</small></div>`;
       const eb = document.createElement('button');
-      eb.textContent = fmt(ENERGY_BOOST_PRICE) + ' 🍌';
-      eb.onclick = buyEnergy;
-      row.appendChild(eb);
-      shopRefs.push({ el: eb, ok: () => state.boosts < ENERGY_BOOST_MAX && state.bananas >= ENERGY_BOOST_PRICE });
-      wrap.appendChild(row);
+      eb.className = 'buy';
+      eb.textContent = fmt(BOOST_PRICE) + ' 🍌';
+      eb.onclick = async () => {
+        const r = await Server.buyEnergy();
+        if (!r.ok) return showError(r.error);
+        snap = r.data;
+        renderPanel();
+      };
+      en.appendChild(eb);
+      shopRefs.push({ el: eb, kind: 'green', can: () => snap && snap.boosts < BOOST_MAX && snap.bananas >= BOOST_PRICE });
+      wrap.appendChild(en);
     }
 
     if (shopTab === 'bananas') {
       const box = document.createElement('div');
       box.innerHTML = `
-        <input id="amount" class="buy-input" type="number" min="10000" step="10000"
-               placeholder="Сколько бананов купить?">
+        <input id="amount" class="buy-input" type="number" min="10000" step="10000" placeholder="Сколько бананов купить?">
         <div id="cost" class="note">Введите количество (кратно 10 000)</div>
-        <button id="buyBtn" class="buy-btn" disabled>Купить</button>
+        <button id="buyBtn" class="buy wide" disabled>Купить</button>
         <div class="note">Курс: 10 000 бананов = 1 ⭐. Оплата идёт через бота в Telegram Stars.</div>`;
       const input = box.querySelector('#amount');
       const cost = box.querySelector('#cost');
@@ -350,29 +366,34 @@
           btn.disabled = true;
         }
       });
-      btn.onclick = () => buyBananas(Math.floor(Number(input.value) || 0));
+      btn.onclick = () => {
+        const v = Math.floor(Number(input.value) || 0);
+        const stars = v / BANANAS_PER_STAR;
+        const text = `Купить ${fmt(v)} бананов за ${stars} ⭐?`;
+        const go = () => showError('Оплата подключается через бота. Пока это демо.');
+        if (tg?.showConfirm) tg.showConfirm(text, ok => { if (ok) go(); });
+        else if (confirm(text)) go();
+      };
       wrap.appendChild(box);
     }
-    refreshShopButtons();
     return wrap;
   }
 
-  function refreshShopButtons() {
-    shopRefs.forEach(r => { r.el.disabled = !r.ok(); });
+  function refreshShop() {
+    shopRefs.forEach(r => {
+      if (r.kind === 'green') {
+        const can = !!r.can();
+        r.el.disabled = !can;
+        r.el.classList.toggle('ok', can);
+      } else {
+        const maxed = !!r.maxed();
+        r.el.disabled = maxed;
+        r.el.classList.toggle('gold', !maxed);
+        if (maxed) r.el.textContent = 'Максимум';
+      }
+    });
   }
 
-  // Демо: реальную оплату делает бот через sendInvoice (XTR)
-  function buyBananas(v) {
-    const stars = v / BANANAS_PER_STAR;
-    const text = `Купить ${fmt(v)} бананов за ${stars} ⭐?`;
-    const go = () => tg?.showAlert
-      ? tg.showAlert('Оплата подключается через бота. Пока это демо.')
-      : alert('Демо: оплата подключается через бота.');
-    if (tg?.showConfirm) tg.showConfirm(text, ok => { if (ok) go(); });
-    else if (confirm(text)) go();
-  }
-
-  // ---------- Таблица лидеров (демо: только свои данные) ----------
   function buildBoard() {
     const wrap = document.createElement('div');
     const tabs = document.createElement('div');
@@ -389,27 +410,25 @@
     const name = tg?.initDataUnsafe?.user?.first_name || 'Вы';
     const row = document.createElement('div');
     row.className = 'row me';
-    row.innerHTML = `<span>1. ${name}</span><span><b data-board></b> 🍌</span>`;
+    row.innerHTML = `<span>${name}</span><span><b data-board></b> 🍌</span>`;
     wrap.appendChild(row);
 
     const note = document.createElement('div');
     note.className = 'note';
-    note.textContent = 'Демо: настоящий топ появится после подключения сервера.';
+    note.textContent = 'Пока показываются только ваши данные.';
     wrap.appendChild(note);
-    updateBoard();
     return wrap;
   }
 
   function updateBoard() {
     const el = document.querySelector('[data-board]');
-    if (!el) return;
-    const value = boardPeriod === 'all' ? state.stats.all
-                : boardPeriod === 'month' ? state.earned.month
-                : state.earned.week;
-    el.textContent = fmt(value);
+    if (!el || !snap) return;
+    const v = boardPeriod === 'all' ? snap.stats.all
+            : boardPeriod === 'month' ? snap.stats.month
+            : snap.stats.week;
+    el.textContent = fmt(v);
   }
 
-  // ---------- Информация ----------
   function buildInfo() {
     const wrap = document.createElement('div');
     [
@@ -418,6 +437,7 @@
       ['Доход в секунду', 'sec'],
       ['Бананов за клик', 'click'],
       ['Энергия', 'energy'],
+      ['Оффлайн-доход', 'offline'],
     ].forEach(([label, key]) => {
       const r = document.createElement('div');
       r.className = 'row';
@@ -427,50 +447,48 @@
 
     const t = document.createElement('button');
     t.className = 'theme-btn';
-    t.textContent = state.theme === 'dark' ? 'Сделать тему белой' : 'Сделать тему чёрной';
-    t.onclick = toggleTheme;
+    const dark = document.documentElement.classList.contains('dark');
+    t.textContent = dark ? 'Сделать тему белой' : 'Сделать тему чёрной';
+    t.onclick = () => { setTheme(!document.documentElement.classList.contains('dark')); renderPanel(); };
     wrap.appendChild(t);
-
-    updateInfo();
     return wrap;
   }
 
   function updateInfo() {
+    if (!snap) return;
     const vals = {
-      all: fmt(state.stats.all),
-      taps: fmt(state.stats.taps),
-      sec: fmt(state.perSec),
-      click: fmt(state.perClick),
-      energy: `${Math.floor(state.energy)} / ${maxEnergy()}`,
+      all: fmt(snap.stats.all),
+      taps: fmt(snap.stats.taps),
+      sec: snap.monkey ? '1 банан за 10 сек' : '0',
+      click: fmt(snap.perClick),
+      energy: `${Math.floor(snap.energy)} / ${snap.maxEnergy}`,
+      offline: `${snap.offlineMin} мин (макс. ${snap.offlineMax})`,
     };
     document.querySelectorAll('[data-info]').forEach(el => {
       el.textContent = vals[el.dataset.info];
     });
   }
 
-  function toggleTheme() {
-    state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    applyTheme();
-    save();
-    renderPanel();
+  $('shopBtn').onclick = () => showOverlay('shop', 'Магазин', true);
+  $('boardBtn').onclick = () => showOverlay('board', 'Таблица лидеров', false);
+  $('helpBtn').onclick = () => showOverlay('info', 'Информация', false);
+
+  async function refresh() {
+    if (collecting) return;
+    const r = await Server.state();
+    if (r.ok) { snap = r.data; updateAll(); }
   }
 
-  document.getElementById('shopBtn').onclick = () => showOverlay('shop', 'Магазин', true);
-  document.getElementById('boardBtn').onclick = () => showOverlay('board', 'Таблица лидеров', false);
-  document.getElementById('helpBtn').onclick = () => showOverlay('info', 'Информация', false);
+  window.addEventListener('pagehide', () => { Server.leave(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') Server.leave();
+    else refresh();
+  });
 
-  // ---------- Главный экран ----------
-  function updateMain() {
-    document.getElementById('score').textContent = fmt(state.bananas);
-    const max = maxEnergy();
-    document.getElementById('energyFill').style.width = (state.energy / max * 100) + '%';
-    refreshShopButtons();
-    updateInfo();
-    updateBoard();
-    save();
-  }
-
-  updateMain();
+  (async () => {
+    await refresh();
+    setInterval(refresh, 1000);
+  })();
 </script>
 </body>
 </html>
